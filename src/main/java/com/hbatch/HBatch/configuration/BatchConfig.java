@@ -1,5 +1,6 @@
 package com.hbatch.HBatch.configuration;
 
+import com.hbatch.HBatch.core.domain.Product;
 import com.hbatch.HBatch.entrypoint.processors.ProductItemProcessor;
 import com.hbatch.HBatch.gateway.entity.product.ProductEntity;
 import com.hbatch.HBatch.gateway.entity.product.ProductRepository;
@@ -35,9 +36,9 @@ public class BatchConfig {
 
     @Bean
     public Step step(JobRepository jobRepository,
-                     PlatformTransactionManager transactionManager, ItemReader<ProductEntity> itemReader, ItemWriter<ProductEntity> itemWriter) {
+                     PlatformTransactionManager transactionManager, ItemReader<Product> itemReader, ItemWriter<ProductEntity> itemWriter) {
         return new StepBuilder("productStep", jobRepository)
-                .<ProductEntity, ProductEntity>chunk(100, transactionManager)
+                .<Product, ProductEntity>chunk(100, transactionManager)
                 .reader(itemReader)
                 .writer(itemWriter)
                 .processor(itemProcessor())
@@ -50,13 +51,13 @@ public class BatchConfig {
     }
 
     @Bean
-    public ItemProcessor<ProductEntity, ProductEntity> itemProcessor() {
+    public ItemProcessor<Product, ProductEntity> itemProcessor() {
         return new ProductItemProcessor();
     }
 
     @Bean
-    public FlatFileItemReader<ProductEntity> flatFileItemReader(@Value("${inputFile}") Resource inputFile) {
-        FlatFileItemReader<ProductEntity> flatFileItemReader = new FlatFileItemReader<>();
+    public FlatFileItemReader<Product> flatFileItemReader(@Value("${inputFile}") Resource inputFile) {
+        FlatFileItemReader<Product> flatFileItemReader = new FlatFileItemReader<>();
         flatFileItemReader.setName("productItemReader");
         flatFileItemReader.setLinesToSkip(1);
         flatFileItemReader.setResource(inputFile);
@@ -65,15 +66,15 @@ public class BatchConfig {
     }
 
     @Bean
-    public LineMapper<ProductEntity> lineMapper() {
-        DefaultLineMapper<ProductEntity> defaultLineMapper = new DefaultLineMapper<>();
+    public LineMapper<Product> lineMapper() {
+        DefaultLineMapper<Product> defaultLineMapper = new DefaultLineMapper<>();
         DelimitedLineTokenizer lineTokenizer = new DelimitedLineTokenizer();
         lineTokenizer.setDelimiter(",");
         lineTokenizer.setNames("id", "name", "price", "quantity");
         lineTokenizer.setStrict(false);
         defaultLineMapper.setLineTokenizer(lineTokenizer);
-        BeanWrapperFieldSetMapper<ProductEntity> fieldSetMapper = new BeanWrapperFieldSetMapper<>();
-        fieldSetMapper.setTargetType(ProductEntity.class);
+        BeanWrapperFieldSetMapper<Product> fieldSetMapper = new BeanWrapperFieldSetMapper<>();
+        fieldSetMapper.setTargetType(Product.class);
         defaultLineMapper.setFieldSetMapper(fieldSetMapper);
         return defaultLineMapper;
     }
